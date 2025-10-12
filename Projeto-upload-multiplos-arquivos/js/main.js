@@ -10,6 +10,9 @@ import {
 const arquivoInput = document.getElementById("arquivoInput");
 const enviarBtn = document.getElementById("enviarBtn");
 
+const MAX_FILES = 10;
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
 async function handleFileUpload() {
   clearMessage();
   const files = arquivoInput.files;
@@ -19,6 +22,18 @@ async function handleFileUpload() {
     return;
   }
 
+  if (files.length > MAX_FILES) {
+    showMessage(`Erro: Selecione no máximo ${MAX_FILES} arquivos.`, "error");
+    return;
+  }
+
+  for (const file of files) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      showMessage(`Erro: O arquivo "${file.name}" excede o limite de 5MB.`, "error");
+      return;
+    }
+  }
+
   updateButtonState(true);
 
   try {
@@ -26,6 +41,7 @@ async function handleFileUpload() {
     if (result.ok) {
       showMessage(result.data.message, "success");
       loadAndRenderImages();
+      arquivoInput.value = "";
     } else {
       showMessage(result.data.error, "error");
     }
