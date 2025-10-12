@@ -17,25 +17,30 @@ export function clearMessage() {
   elements.messageBox.style.display = "none";
 }
 
-export function updateButtonState(isLoading, text = "Enviar Imagem") {
+export function updateButtonState(isLoading, text = "Enviar Imagens") {
   elements.enviarBtn.disabled = isLoading;
   elements.enviarBtn.textContent = isLoading ? "Enviando..." : text;
 }
 
-export function renderImagePreview(file) {
+export function renderImagePreview(files) {
   elements.previewContainer.innerHTML = "";
 
-  if (file && file.type.startsWith("image/")) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.alt = "Pré-visualização";
-      img.style.maxWidth = "200px";
-      img.style.borderRadius = "8px";
-      elements.previewContainer.appendChild(img);
-    };
-    reader.readAsDataURL(file);
+  for (const file of files) {
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.alt = "Pré-visualização";
+        img.style.maxWidth = "100px";
+        img.style.maxHeight = "100px";
+        img.style.borderRadius = "8px";
+        img.style.margin = "5px";
+        img.style.objectFit = "cover";
+        elements.previewContainer.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
   }
 }
 

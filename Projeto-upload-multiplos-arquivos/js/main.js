@@ -9,6 +9,7 @@ import {
 
 const arquivoInput = document.getElementById("arquivoInput");
 const enviarBtn = document.getElementById("enviarBtn");
+const previewContainer = document.getElementById("previewContainer");
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -42,6 +43,7 @@ async function handleFileUpload() {
       showMessage(result.data.message, "success");
       loadAndRenderImages();
       arquivoInput.value = "";
+      previewContainer.innerHTML = "";
     } else {
       showMessage(result.data.error, "error");
     }
@@ -68,10 +70,14 @@ async function loadAndRenderImages() {
 }
 
 enviarBtn.addEventListener("click", handleFileUpload);
+
 arquivoInput.addEventListener("change", () => {
   clearMessage();
-  if (arquivoInput.files.length > 0) {
-    renderImagePreview(arquivoInput.files[0]);
+  const files = arquivoInput.files;
+  if (files.length > 0) {
+    renderImagePreview(files);
+  } else {
+    previewContainer.innerHTML = "";
   }
 });
 
