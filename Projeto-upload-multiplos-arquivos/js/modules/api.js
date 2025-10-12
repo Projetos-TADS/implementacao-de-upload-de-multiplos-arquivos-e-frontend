@@ -1,8 +1,11 @@
 const API_URL = "http://localhost:8080/api";
 
-export async function uploadFile(file) {
+export async function uploadFile(files) {
   const formData = new FormData();
-  formData.append("image", file);
+
+  for (const file of files) {
+    formData.append("meusArquivos", file);
+  }
 
   const response = await fetch(`${API_URL}/upload`, {
     method: "POST",

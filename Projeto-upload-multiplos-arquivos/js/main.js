@@ -12,9 +12,9 @@ const enviarBtn = document.getElementById("enviarBtn");
 
 async function handleFileUpload() {
   clearMessage();
-  const file = arquivoInput.files[0];
+  const files = arquivoInput.files;
 
-  if (!file) {
+  if (files.length === 0) {
     showMessage("Nenhum arquivo selecionado.", "alert");
     return;
   }
@@ -22,7 +22,7 @@ async function handleFileUpload() {
   updateButtonState(true);
 
   try {
-    const result = await uploadFile(file);
+    const result = await uploadFile(files);
     if (result.ok) {
       showMessage(result.data.message, "success");
       loadAndRenderImages();
@@ -54,7 +54,9 @@ async function loadAndRenderImages() {
 enviarBtn.addEventListener("click", handleFileUpload);
 arquivoInput.addEventListener("change", () => {
   clearMessage();
-  renderImagePreview(arquivoInput.files[0]);
+  if (arquivoInput.files.length > 0) {
+    renderImagePreview(arquivoInput.files[0]);
+  }
 });
 
 document.addEventListener("DOMContentLoaded", loadAndRenderImages);
