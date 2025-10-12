@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload de Imagem</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Upload de Imagem</h1>
+        <p class="subtitle">Selecione uma imagem (PNG, JPEG, GIF, WebP) para enviar.</p>
+      </header>
+
+      <main>
+        <div class="form-group">
+          <label for="arquivoInput">Selecione o arquivo:</label>
+          <input
+            type="file"
+            id="arquivoInput"
+            name="image"
+            accept="image/png, image/jpeg, image/gif, image/webp"
+          />
+        </div>
+
+        <div id="previewContainer" class="preview-container"></div>
+
+        <button id="enviarBtn">Enviar Imagem</button>
+
+        <div id="messageBox" class="message-box" role="alert"></div>
+      </main>
+
+      <section class="gallery">
+        <h2>Imagens Enviadas</h2>
+        <div id="galleryContainer" class="gallery-grid">
+          <p>Carregando imagens...</p>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
