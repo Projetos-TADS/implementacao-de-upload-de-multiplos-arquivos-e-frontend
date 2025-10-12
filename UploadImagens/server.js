@@ -40,7 +40,7 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        `Tipo de arquivo não permitido. Apenas imagens são aceitas (JPEG, PNG, GIF, WebP). Tipo enviado: ${file.mimetype}`
+        `Tipo de arquivo não permitido. Apenas imagens são aceitas (JPEG e PNG). Tipo enviado: ${file.mimetype}`
       ),
       false
     );
