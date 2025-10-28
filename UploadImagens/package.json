@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "Aplicação de upload de imagens com validação",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",

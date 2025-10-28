@@ -1,13 +1,17 @@
-const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const cors = require("cors");
-const fs = require("fs");
-const bcrypt = require("bcryptjs");
-const userModel = require("./models/userModel");
+import express from "express";
+import multer from "multer";
+import path from "path";
+import cors from "cors";
+import fs from "fs";
+import bcrypt from "bcryptjs";
+import { fileURLToPath } from "url";
+import { findByUsername, addUser } from "./models/userModel.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(express.json());
@@ -69,7 +73,7 @@ app.post("/register", async (req, res) => {
       });
     }
 
-    const existingUser = userModel.findByUsername(username);
+    const existingUser = findByUsername(username);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -80,7 +84,7 @@ app.post("/register", async (req, res) => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    const newUser = userModel.addUser({
+    const newUser = addUser({
       username,
       email,
       passwordHash,

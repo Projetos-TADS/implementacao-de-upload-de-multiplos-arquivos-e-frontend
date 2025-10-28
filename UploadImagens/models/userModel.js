@@ -1,24 +1,17 @@
-const users = [];
-
+let users = [];
 let currentId = 1;
 
-const addUser = (user) => {
-  const newUser = {
-    id: currentId++,
-    username: user.username,
-    email: user.email,
-    passwordHash: user.passwordHash,
-  };
-  users.push(newUser);
-
-  return newUser;
-};
-
-const findByUsername = (username) => {
+export const findByUsername = (username) => {
   return users.find((user) => user.username === username);
 };
 
-module.exports = {
-  addUser,
-  findByUsername,
+export const addUser = (userData) => {
+  const newUser = {
+    id: currentId++,
+    username: userData.username,
+    email: userData.email,
+    passwordHash: userData.passwordHash,
+  };
+  users.push(newUser);
+  return newUser;
 };
