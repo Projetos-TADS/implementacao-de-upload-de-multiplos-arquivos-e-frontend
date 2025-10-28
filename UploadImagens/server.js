@@ -3,6 +3,8 @@ const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
 const fs = require("fs");
+const bcrypt = require("bcryptjs");
+const userModel = require("./models/userModel");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -54,6 +56,52 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024,
     files: 10,
   },
+});
+
+app.post("/register", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Username, email e password são obrigatórios.",
+      });
+    }
+
+    const existingUser = userModel.findByUsername(username);
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: "Este nome de usuário já está em uso.",
+      });
+    }
+
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const newUser = userModel.addUser({
+      username,
+      email,
+      passwordHash,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Usuário cadastrado com sucesso!",
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
+  } catch (error) {
+    console.error("Erro na rota /register:", error);
+    res.status(500).json({
+      success: false,
+      error: "Erro interno do servidor ao tentar registrar.",
+    });
+  }
 });
 
 app.post("/api/upload", (req, res) => {
@@ -130,7 +178,7 @@ app.use((error, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📁 Pasta de uploads: ${uploadsDir}`);
-  console.log(`🌐 Acesse: http://localhost:${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Pasta de uploads: ${uploadsDir}`);
+  console.log(`Acesse: http://localhost:${PORT}`);
 });
