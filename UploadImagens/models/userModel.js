@@ -1,17 +1,54 @@
-let users = [];
-let currentId = 1;
+import bcrypt from "bcrypt";
+
+const users = [
+  {
+    id: 1,
+    username: "usuario1",
+    passwordHash: "$2b$10$f.Xm/j.VPibTw/c.nvu2Q.fDnn2p7m8.j.B/w.72.1G.xI.1m.g.O",
+  },
+  {
+    id: 2,
+    username: "usuario2",
+    passwordHash: "$2b$10$A.Y.L.i.U.f.x.b.D.i.E.v.A.b.l.o.g.o.I.v.T.j.B.w.72.1G.xI",
+  },
+];
 
 export const findByUsername = (username) => {
-  return users.find((user) => user.username === username);
+  return new Promise((resolve, reject) => {
+    try {
+      const user = users.find((u) => u.username === username);
+      resolve(user);
+    } catch (error) {
+      reject(error);
+    }
+  });
 };
 
-export const addUser = (userData) => {
-  const newUser = {
-    id: currentId++,
-    username: userData.username,
-    email: userData.email,
-    passwordHash: userData.passwordHash,
-  };
-  users.push(newUser);
-  return newUser;
+export const createUser = async (username, password) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const existingUser = users.find((u) => u.username === username);
+      if (existingUser) {
+        reject(new Error("Usuário já existe."));
+        return;
+      }
+
+      const saltRounds = 10;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+
+      const newId = users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1;
+
+      const newUser = {
+        id: newId,
+        username: username,
+        passwordHash: passwordHash,
+      };
+
+      users.push(newUser);
+
+      resolve(newUser);
+    } catch (error) {
+      reject(error);
+    }
+  });
 };

@@ -1,174 +1,130 @@
+import "dotenv/config";
 import express from "express";
 import multer from "multer";
 import path from "path";
-import cors from "cors";
 import fs from "fs";
-import bcrypt from "bcryptjs";
+import cors from "cors";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { fileURLToPath } from "url";
-import { findByUsername, addUser } from "./models/userModel.js";
 
-const app = express();
-const PORT = process.env.PORT || 8080;
+import { findByUsername, createUser } from "./models/userModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const app = express();
+const PORT = process.env.PORT || 3001;
+
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+const UPLOADS_DIR = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR);
 }
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, UPLOADS_DIR);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
   },
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-  const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-  const fileExtension = path.extname(file.originalname).toLowerCase();
+const upload = multer({ storage: storage });
 
-  if (allowedMimeTypes.includes(file.mimetype) && allowedExtensions.includes(fileExtension)) {
-    cb(null, true);
-  } else {
-    cb(
-      new Error(
-        `Tipo de arquivo não permitido. Apenas imagens são aceitas (JPEG e PNG). Tipo enviado: ${file.mimetype}`
-      ),
-      false
-    );
+function verificarToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (token == null) {
+    return res.sendStatus(401);
   }
-};
 
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024,
-    files: 10,
-  },
-});
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+
+    req.userId = decoded.userId;
+    next();
+  });
+}
 
 app.post("/register", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: "Username, email e password são obrigatórios.",
-      });
+    if (!username || !password) {
+      return res.status(400).json({ message: "Usuário e senha são obrigatórios." });
     }
 
-    const existingUser = findByUsername(username);
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: "Este nome de usuário já está em uso.",
-      });
-    }
+    const newUser = await createUser(username, password);
 
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-
-    const newUser = addUser({
-      username,
-      email,
-      passwordHash,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "Usuário cadastrado com sucesso!",
-      user: {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-      },
-    });
+    res.status(201).json({ id: newUser.id, username: newUser.username });
   } catch (error) {
-    console.error("Erro na rota /register:", error);
-    res.status(500).json({
-      success: false,
-      error: "Erro interno do servidor ao tentar registrar.",
-    });
+    if (error.message === "Usuário já existe.") {
+      return res.status(409).json({ message: error.message });
+    }
+    console.error("Erro no registro:", error);
+    res.status(500).json({ message: "Erro interno do servidor." });
   }
 });
 
-app.post("/api/upload", (req, res) => {
-  const uploadMultiple = upload.array("meusArquivos", 10);
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
 
-  uploadMultiple(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      let errorMessage = "";
-      switch (err.code) {
-        case "LIMIT_FILE_SIZE":
-          errorMessage = "Um dos arquivos é muito grande. Tamanho máximo permitido: 5MB";
-          break;
-        case "LIMIT_FILE_COUNT":
-          errorMessage = "Muitos arquivos. Envie no máximo 10 imagens por vez";
-          break;
-        default:
-          errorMessage = `Erro no upload: ${err.message}`;
-      }
-      return res.status(400).json({ success: false, error: errorMessage });
-    } else if (err) {
-      return res.status(400).json({ success: false, error: err.message });
+    if (!username || !password) {
+      return res.status(400).json({ message: "Usuário e senha são obrigatórios." });
     }
 
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, error: "Nenhuma imagem foi enviada" });
+    const user = await findByUsername(username);
+
+    if (!user) {
+      return res.status(401).json({ message: "Credenciais inválidas." });
     }
 
-    const filesInfo = req.files.map((file) => ({
-      originalName: file.originalname,
-      filename: file.filename,
-      mimetype: file.mimetype,
-      size: file.size,
-      path: file.path,
-      url: `/uploads/${file.filename}`,
-    }));
+    const isPasswordMatch = await bcrypt.compare(password, user.passwordHash);
 
-    console.log("Upload realizado com sucesso:", filesInfo);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: "Credenciais inválidas." });
+    }
 
-    res.status(200).json({
-      success: true,
-      message: "Imagens enviadas com sucesso!",
-      files: filesInfo,
-    });
-  });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    res.status(200).json({ token: token });
+  } catch (error) {
+    console.error("Erro no login:", error);
+    res.status(500).json({ message: "Erro interno do servidor." });
+  }
 });
 
-app.get("/api/images", (req, res) => {
-  fs.readdir(uploadsDir, (err, files) => {
-    if (err) {
-      return res.status(500).json({ success: false, error: "Erro ao listar imagens" });
-    }
+app.post("/upload", verificarToken, upload.array("files"), (req, res) => {
+  console.log(`Upload recebido do usuário ID: ${req.userId}`);
 
-    const imageFiles = files
-      .filter((file) => {
-        const ext = path.extname(file).toLowerCase();
-        return [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(ext);
-      })
-      .map((file) => ({
-        filename: file,
-        url: `/uploads/${file}`,
-      }));
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).send("Nenhum arquivo foi enviado.");
+  }
 
-    res.json({ success: true, images: imageFiles });
+  const fileInfos = req.files.map((file) => {
+    return {
+      filename: file.filename,
+      originalname: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+    };
+  });
+
+  res.status(200).json({
+    message: "Arquivos enviados com sucesso!",
+    files: fileInfos,
   });
 });
 
@@ -176,13 +132,6 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.use((error, req, res, next) => {
-  console.error("Erro no servidor:", error);
-  res.status(500).json({ success: false, error: "Erro interno do servidor" });
-});
-
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`Pasta de uploads: ${uploadsDir}`);
-  console.log(`Acesse: http://localhost:${PORT}`);
 });
