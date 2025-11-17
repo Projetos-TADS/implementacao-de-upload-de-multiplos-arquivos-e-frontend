@@ -59,13 +59,13 @@ function verificarToken(req, res, next) {
 
 app.post("/register", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ message: "Usuário e senha são obrigatórios." });
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "Usuário, email e senha são obrigatórios." });
     }
 
-    const newUser = await createUser(username, password);
+    const newUser = await createUser(username, email, password);
 
     res.status(201).json({ id: newUser.id, username: newUser.username });
   } catch (error) {
@@ -99,14 +99,14 @@ app.post("/login", async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    res.status(200).json({ token: token });
+    res.status(200).json({ token: token, username: user.username });
   } catch (error) {
     console.error("Erro no login:", error);
     res.status(500).json({ message: "Erro interno do servidor." });
   }
 });
 
-app.post("/upload", verificarToken, upload.array("files"), (req, res) => {
+app.post("/upload", verificarToken, upload.array("meusArquivos"), (req, res) => {
   console.log(`Upload recebido do usuário ID: ${req.userId}`);
 
   if (!req.files || req.files.length === 0) {
@@ -127,6 +127,25 @@ app.post("/upload", verificarToken, upload.array("files"), (req, res) => {
     files: fileInfos,
   });
 });
+
+app.get("/images", async (req, res) => {
+  try {
+    const files = await fs.promises.readdir(UPLOADS_DIR);
+    const images = files
+      .filter((file) => /\.(jpg|jpeg|png|gif)$/i.test(file))
+      .map((file) => ({
+        filename: file,
+        url: `/uploads/${file}`,
+      }));
+
+    res.status(200).json({ success: true, images });
+  } catch (error) {
+    console.error("Erro ao ler diretório:", error);
+    res.status(500).json({ success: false, message: "Erro ao listar imagens" });
+  }
+});
+
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));

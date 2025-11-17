@@ -3,41 +3,109 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upload de Imagem</title>
+    <title>Upload de Imagem com Autenticação</title>
     <link rel="stylesheet" href="style.css" />
+    <style>
+      .auth-container {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .auth-form input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .link-btn {
+        background: none;
+        border: none;
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      #logoutBtn {
+        background-color: #f44336;
+        margin-left: 10px;
+      }
+      .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
-      <header>
-        <h1>Upload de Imagem</h1>
-        <p class="subtitle">Selecione até 10 imagens (PNG ou JPEG) com no máximo 5MB cada.</p>
-      </header>
-
-      <main>
-        <div class="form-group">
-          <label for="arquivoInput">Selecione os arquivos:</label>
-          <input
-            type="file"
-            id="arquivoInput"
-            name="image"
-            accept="image/png, image/jpeg"
-            multiple
-          />
+      <div id="authSection">
+        <div id="loginContainer" class="auth-container">
+          <h2>Login</h2>
+          <form id="loginForm" class="auth-form">
+            <input type="text" id="loginUsername" placeholder="Usuário" required />
+            <input type="password" id="loginPassword" placeholder="Senha" required />
+            <button type="submit">Entrar</button>
+          </form>
+          <p>Não tem conta? <button id="showRegisterBtn" class="link-btn">Cadastre-se</button></p>
         </div>
 
-        <div id="previewContainer" class="preview-container"></div>
-
-        <button id="enviarBtn">Enviar Imagens</button>
-
-        <div id="messageBox" class="message-box" role="alert"></div>
-      </main>
-
-      <section class="gallery">
-        <h2>Imagens Enviadas</h2>
-        <div id="galleryContainer" class="gallery-grid">
-          <p>Carregando imagens...</p>
+        <div id="registerContainer" class="auth-container hidden">
+          <h2>Cadastro</h2>
+          <form id="registerForm" class="auth-form">
+            <input type="text" id="regUsername" placeholder="Usuário" required />
+            <input type="email" id="regEmail" placeholder="Email" required />
+            <input type="password" id="regPassword" placeholder="Senha" required />
+            <button type="submit">Cadastrar</button>
+          </form>
+          <p>Já tem conta? <button id="showLoginBtn" class="link-btn">Fazer Login</button></p>
         </div>
-      </section>
+      </div>
+
+      <div id="appSection" class="hidden">
+        <header class="header-actions">
+          <div>
+            <h1>Upload de Imagem</h1>
+            <p class="subtitle">Bem-vindo, <span id="userDisplay"></span></p>
+          </div>
+          <button id="logoutBtn">Sair</button>
+        </header>
+
+        <main>
+          <p class="subtitle">Selecione até 10 imagens (PNG ou JPEG) com no máximo 5MB cada.</p>
+          <div class="form-group">
+            <label for="arquivoInput">Selecione os arquivos:</label>
+            <input
+              type="file"
+              id="arquivoInput"
+              name="image"
+              accept="image/png, image/jpeg"
+              multiple
+            />
+          </div>
+
+          <div id="previewContainer" class="preview-container"></div>
+
+          <button id="enviarBtn">Enviar Imagens</button>
+
+          <div id="messageBox" class="message-box" role="alert"></div>
+        </main>
+
+        <section class="gallery">
+          <h2>Imagens Enviadas</h2>
+          <div id="galleryContainer" class="gallery-grid">
+            <p>Carregando imagens...</p>
+          </div>
+        </section>
+      </div>
     </div>
 
     <script type="module" src="./js/main.js"></script>
