@@ -43,6 +43,14 @@
         align-items: center;
         margin-bottom: 20px;
       }
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .checkbox-group input {
+        width: auto;
+      }
     </style>
   </head>
   <body>
@@ -64,6 +72,12 @@
             <input type="text" id="regUsername" placeholder="Usuário" required />
             <input type="email" id="regEmail" placeholder="Email" required />
             <input type="password" id="regPassword" placeholder="Senha" required />
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="regIsAdmin" />
+              <label for="regIsAdmin">Cadastrar como Admin?</label>
+            </div>
+
             <button type="submit">Cadastrar</button>
           </form>
           <p>Já tem conta? <button id="showLoginBtn" class="link-btn">Fazer Login</button></p>

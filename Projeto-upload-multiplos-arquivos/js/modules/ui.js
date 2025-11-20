@@ -52,7 +52,7 @@ export function renderImagePreview(files) {
   }
 }
 
-export function renderGallery(images) {
+export function renderGallery(images, userRole) {
   elements.galleryContainer.innerHTML = "";
 
   if (!images || images.length === 0) {
@@ -63,6 +63,7 @@ export function renderGallery(images) {
   images.forEach((image) => {
     const galleryItem = document.createElement("div");
     galleryItem.className = "gallery-item";
+    galleryItem.style.position = "relative";
 
     const img = document.createElement("img");
     img.src = `http://localhost:3001${image.url}`;
@@ -70,6 +71,29 @@ export function renderGallery(images) {
     img.loading = "lazy";
 
     galleryItem.appendChild(img);
+
+    if (userRole === "admin") {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "X";
+      deleteBtn.className = "btn-delete";
+      deleteBtn.dataset.filename = image.filename;
+
+      deleteBtn.style.position = "absolute";
+      deleteBtn.style.top = "5px";
+      deleteBtn.style.right = "5px";
+      deleteBtn.style.backgroundColor = "rgba(255, 0, 0, 0.8)";
+      deleteBtn.style.color = "white";
+      deleteBtn.style.border = "none";
+      deleteBtn.style.borderRadius = "50%";
+      deleteBtn.style.width = "25px";
+      deleteBtn.style.height = "25px";
+      deleteBtn.style.cursor = "pointer";
+      deleteBtn.style.fontWeight = "bold";
+      deleteBtn.title = "Excluir imagem";
+
+      galleryItem.appendChild(deleteBtn);
+    }
+
     elements.galleryContainer.appendChild(galleryItem);
   });
 }

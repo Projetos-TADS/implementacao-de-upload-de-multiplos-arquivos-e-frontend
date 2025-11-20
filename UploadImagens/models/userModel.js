@@ -17,44 +17,26 @@ const users = [
   },
 ];
 
-export const findByUsername = (username) => {
-  return new Promise((resolve, reject) => {
-    try {
-      const user = users.find((u) => u.username === username);
-      resolve(user);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
+export async function findByUsername(username) {
+  return users.find((user) => user.username === username);
+}
 
-export const createUser = async (username, email, password) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const existingUser = users.find((u) => u.username === username);
-      if (existingUser) {
-        reject(new Error("Usuário já existe."));
-        return;
-      }
+export async function createUser(username, email, password, role = "user") {
+  const existingUser = users.find((user) => user.username === username);
+  if (existingUser) {
+    throw new Error("Usuário já existe.");
+  }
 
-      const saltRounds = 10;
-      const passwordHash = await bcrypt.hash(password, saltRounds);
+  const passwordHash = await bcrypt.hash(password, 10);
 
-      const newId = users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1;
+  const newUser = {
+    id: users.length + 1,
+    username,
+    email,
+    passwordHash,
+    role,
+  };
 
-      const newUser = {
-        id: newId,
-        username: username,
-        email: email,
-        passwordHash: passwordHash,
-        role: "user",
-      };
-
-      users.push(newUser);
-
-      resolve(newUser);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
+  users.push(newUser);
+  return newUser;
+}

@@ -7,15 +7,21 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, isAdmin } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({ message: "Usuário, email e senha são obrigatórios." });
     }
 
-    const newUser = await createUser(username, email, password);
+    const role = isAdmin ? "admin" : "user";
 
-    res.status(201).json({ id: newUser.id, username: newUser.username, role: newUser.role });
+    const newUser = await createUser(username, email, password, role);
+
+    res.status(201).json({
+      id: newUser.id,
+      username: newUser.username,
+      role: newUser.role,
+    });
   } catch (error) {
     if (error.message === "Usuário já existe.") {
       return res.status(409).json({ message: error.message });
